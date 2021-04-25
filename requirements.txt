@@ -6,8 +6,7 @@ chardet==3.0.4
 click==7.1.2
 cycler==0.10.0
 cymem==2.0.3
-dataclasses==0.7
-en-core-web-sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-2.3.1/en_core_web_sm-2.3.1.tar.gz
+dataclasses==0.6
 filelock==3.0.12
 future==0.18.2
 googledrivedownloader==0.4
