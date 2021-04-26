@@ -12,8 +12,6 @@ class ModelNames(Enum):
 class DatasetType(Enum):
     TRAIN = "train"
     TEST = "test"
-    VAL = "validation"
-    DEV = "validation"
     VALIDATION = "validation"
 class TaskTypes(Enum):
     ACTION_CLS = "action_cls"
@@ -56,7 +54,7 @@ class MoralStoryDataset(Dataset):
             self._moral_story_data = moral_processor.get_dev_examples(dataset_dir)
         elif self._dataset_type_to_load == DatasetType.TEST:
             self._moral_story_data = moral_processor.get_test_examples(dataset_dir)
-        else: raise UnknownDatasetType ("unknown type specified for self._data_type_to_load: expected: 'train, validation, test'")
+        else: raise UnknownDatasetType ("unknown type specified for self._data_type_to_load: expected enums of: {}".format(DatasetType))
 
     def _process_data(self,moral_stories):
         pass
@@ -101,7 +99,7 @@ if __name__ == '__main__':
     datatype = DatasetType.TEST
     modeltype = ModelNames.ROBERTA
     tasktype = TaskTypes.ACTION_CONTEXT_CLS
-    the_moral_story = MoralStoryClassifyDataset(path,dataset_type = datatype,tokenizer=tokenizer,model_name=modeltype,tasktype=tasktype)
+    the_moral_story = MoralStoryClassifyDataset(path,dataset_type = DatasetType.TEST,tokenizer=tokenizer,model_name=modeltype,tasktype=tasktype)
 
     temp = (the_moral_story._process_data(the_moral_story._moral_story_data[0:10]))
     print("OK")
