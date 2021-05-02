@@ -9,9 +9,9 @@ from torch.optim import lr_scheduler
 from torch import nn
 import numpy as np
 
-class Toy(pl.LightningModule)
+class Toy(pl.LightningModule):
     def __init__(self, model, lr):
-        super.__init__()
+        super().__init__()
         self.model = model
         self.lr = lr
 
@@ -23,7 +23,7 @@ class Toy(pl.LightningModule)
         labels = x[0]
         return self.model([input_tensor, labels])
 
-    def training_step(self, batch, batchidx)
+    def training_step(self, batch, batchidx):
         outputs = self(batch)
         loss = outputs[0]
         return loss
