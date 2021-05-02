@@ -87,7 +87,10 @@ class MoralStoryClassifyDataset(MoralStoryDataset):
         return self._model_name
 
     def __getitem__(self, index):
-        return self._tokenized_data[index]
+        values =  self._tokenized_data[index]
+
+        {"input_ids":values.input_ids,"attention_mask":values.input_mask,
+         "labels":values.label_ids}
     def __len__(self):
         return len(self._tokenized_data)
 
@@ -95,7 +98,7 @@ class MoralStoryClassifyDataset(MoralStoryDataset):
         if stop_index == -1:
             stop_index = len(self._moral_story_data)
         self._tokenized_data = self._process_data(self._moral_story_data[start_index:stop_index])
-        
+
     def _process_data(self,moral_stories):
         self._process_tokenizer()
         moral_processor = self.get_moral_processor()
