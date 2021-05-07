@@ -4,7 +4,7 @@ from torch.utils.data import Dataset, DataLoader
 from transformers import RobertaTokenizer
 import pytorch_lightning as pl
 from enum import Enum
-
+import torch
 class ModelNames(Enum):
     GPT2 =  "gpt2"
     ROBERTA = "roberta"
@@ -89,10 +89,8 @@ class MoralStoryClassifyDataset(MoralStoryDataset):
     def __getitem__(self, index):
         values =  self._tokenized_data[index]
 
-        return {"input_ids":values.input_ids,"attention_mask":values.input_mask,
-         "labels":values.label_ids}
-        
-        
+        return {"input_ids":torch.tensor(values.input_ids),"attention_mask":torch.tensor(values.input_mask),
+         "labels":torch.tensor(values.label_ids)}
     def __len__(self):
         return len(self._tokenized_data)
 
@@ -112,7 +110,7 @@ class MoralStoryClassifyDataset(MoralStoryDataset):
         labels = moral_processor.get_labels()
         tasktype = self.get_tasktype()
         taskcode = TaskTypes.get_associated_code(tasktype)
-        results = utils.convert_examples_to_features(moral_stories,labels,300,300,tokenizer = tokenizer ,
+        results = utils.convert_examples_to_features(moral_stories,labels,200,200,tokenizer = tokenizer ,
                                                      model_name=model_name,task_name=tasktype,
                                                      example_code=taskcode,cls_token= cls_token,
                                                      sep_token = sep_token, sep_token_extra= sep_token_extra)
@@ -132,5 +130,8 @@ if __name__ == '__main__':
     tasktype = TaskTypes.ACTION_CONTEXT_CLS
     the_moral_story = MoralStoryClassifyDataset(path,dataset_type = DatasetType.TEST,tokenizer=tokenizer,model_name=modeltype,tasktype=tasktype)
 
-    temp = (the_moral_story._process_data(the_moral_story._moral_story_data[0:10]))
+    temp = the_moral_story.process_data(0, 1000)
     print("OK")
+    wat = DataLoader(the_moral_story,batch_size=2)
+    result = next(iter(wat))
+    print(result["input_ids"].shape)

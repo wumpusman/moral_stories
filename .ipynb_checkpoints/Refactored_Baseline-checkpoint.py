@@ -19,9 +19,10 @@ class Toy(pl.LightningModule):
         return torch.optim.Adam(self.model.parameters(), lr=self.lr)
     
     def forward(self, x):
+        print('Hi, Michael!')
         input_tensor = x['input_ids']
         labels = x['labels']
-        return self.model([input_tensor, labels])
+        return self.model(input_ids = input_tensor, labels = labels)
 
     def training_step(self, batch, batchidx):
         outputs = self(batch)
