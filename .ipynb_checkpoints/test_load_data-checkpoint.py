@@ -2,6 +2,7 @@ from experiments import utils
 from experiments import run_baseline_experiment
 from torch.utils.data import Dataset, DataLoader
 from transformers import RobertaTokenizer
+import pytorch_lightning as pl
 from enum import Enum
 
 class ModelNames(Enum):
@@ -23,6 +24,19 @@ class TaskTypes(Enum):
 class UnknownDatasetType(Exception):pass
 class UnknownTaskType(Exception):pass
 class UnknownModelName(Exception):pass
+
+class MoralStoryDataLoader(pl.LightningDataModule):
+    def __init__(self,root_dir,modeltype:ModelNames,tasktype:TaskTypes,tokenizer):
+        super().__init__()
+        self._root_dir = root_dir
+        self._tokenizer = tokenizer
+        self._modeltype = modeltype
+        self._tasktype = tasktype
+
+    def setup(self,stage=None):
+        the_moral_story = MoralStoryClassifyDataset(path, dataset_type=DatasetType.TEST, tokenizer=tokenizer,
+                                                    model_name=modeltype, tasktype=tasktype)
+
 
 class MoralStoryDataset(Dataset):
     def __init__(self, dataset_dir, dataset_type:DatasetType = DatasetType.TRAIN, tokenizer=None):
@@ -65,11 +79,28 @@ class MoralStoryClassifyDataset(MoralStoryDataset):
         super().__init__(dataset_dir, dataset_type, tokenizer)
         self._model_name = model_name
         self._tasktype = tasktype
+        self._tokenized_data = []
     def get_tasktype(self):
         assert "cls" in self._tasktype.value, "cls must appear for classification type task"
         return self._tasktype.value
     def get_model_name(self):
         return self._model_name
+
+    def __getitem__(self, index):
+        values =  self._tokenized_data[index]
+
+        return {"input_ids":values.input_ids,"attention_mask":values.input_mask,
+         "labels":values.label_ids}
+        
+        
+    def __len__(self):
+        return len(self._tokenized_data)
+
+    def process_data(self,start_index =0 ,stop_index = -1):
+        if stop_index == -1:
+            stop_index = len(self._moral_story_data)
+        self._tokenized_data = self._process_data(self._moral_story_data[start_index:stop_index])
+
     def _process_data(self,moral_stories):
         self._process_tokenizer()
         moral_processor = self.get_moral_processor()

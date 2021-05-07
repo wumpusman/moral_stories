@@ -20,7 +20,7 @@ class Toy(pl.LightningModule):
     
     def forward(self, x):
         input_tensor = x['input_ids']
-        labels = x['labelsf']
+        labels = x['labels']
         return self.model([input_tensor, labels])
 
     def training_step(self, batch, batchidx):
