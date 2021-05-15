@@ -26,16 +26,41 @@ class UnknownTaskType(Exception):pass
 class UnknownModelName(Exception):pass
 
 class MoralStoryDataLoader(pl.LightningDataModule):
-    def __init__(self,root_dir,modeltype:ModelNames,tasktype:TaskTypes,tokenizer):
+    def __init__(self,root_dir,modeltype:ModelNames,tasktype:TaskTypes,tokenizer, amount_to_process = 100,batchsize = 8, num_workers = 1):
         super().__init__()
         self._root_dir = root_dir
         self._tokenizer = tokenizer
         self._modeltype = modeltype
         self._tasktype = tasktype
+        self._amount_to_process = amount_to_process #sets a cap on how much data to select
+        self._workers = num_workers
+        self._batchsize = batchsize
+        self._trainset = None
+        self._testset = None
+        self._valset = None
 
     def setup(self,stage=None):
-        the_moral_story = MoralStoryClassifyDataset(path, dataset_type=DatasetType.TEST, tokenizer=tokenizer,
+        the_moral_story_test = MoralStoryClassifyDataset(path, dataset_type=DatasetType.TEST, tokenizer=tokenizer,
                                                     model_name=modeltype, tasktype=tasktype)
+        the_moral_story_train = MoralStoryClassifyDataset(path, dataset_type=DatasetType.TRAIN, tokenizer=tokenizer,
+                                                         model_name=modeltype, tasktype=tasktype)
+        the_moral_story_validation = MoralStoryClassifyDataset(path, dataset_type=DatasetType.VALIDATION, tokenizer=tokenizer,
+                                                          model_name=modeltype, tasktype=tasktype)
+
+        the_moral_story_test.process_data(0,self._amount_to_process)
+        the_moral_story_validation.process_data(0,self._amount_to_process)
+        the_moral_story_train.process_data(0,self._amount_to_process)
+        self._trainset = the_moral_story_train
+        self._testset = the_moral_story_test
+        self._valset =the_moral_story_validation
+    def train_dataloader(self):
+        return DataLoader(self._trainset,batch_size=self._batchsize,num_workers=self._workers,shuffle=True)
+
+    def test_dataloader(self):
+        return DataLoader(self._testset,batch_size=self._batchsize,num_workers=self._workers,shuffle=False)
+
+    def val_dataloader(self):
+        return DataLoader(self._valset,batch_size=self._batchsize,num_workers=self._workers,shuffle=False)
 
 
 class MoralStoryDataset(Dataset):
@@ -95,8 +120,12 @@ class MoralStoryClassifyDataset(MoralStoryDataset):
         return len(self._tokenized_data)
 
     def process_data(self,start_index =0 ,stop_index = -1):
+        max_length = len(self._moral_story_data)
         if stop_index == -1:
-            stop_index = len(self._moral_story_data)
+            stop_index = max_length
+        elif max_length < stop_index:
+            stop_index = max_length
+
         self._tokenized_data = self._process_data(self._moral_story_data[start_index:stop_index])
 
     def _process_data(self,moral_stories):

@@ -23,7 +23,7 @@ class Toy(pl.LightningModule)
         labels = x[0]
         return self.model([input_tensor, labels])
 
-    def training_step(self, batch, batchidx)
+    def training_step(self, batch, batchidx):
         outputs = self(batch)
         loss = outputs[0]
         return loss
