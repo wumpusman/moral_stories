@@ -5,6 +5,7 @@ from transformers import RobertaTokenizer
 import pytorch_lightning as pl
 from enum import Enum
 import torch
+
 class ModelNames(Enum):
     GPT2 =  "gpt2"
     ROBERTA = "roberta"
@@ -26,11 +27,11 @@ class UnknownTaskType(Exception):pass
 class UnknownModelName(Exception):pass
 
 class MoralStoryDataLoader(pl.LightningDataModule):
-    def __init__(self,root_dir,modeltype:ModelNames,tasktype:TaskTypes,tokenizer, amount_to_process = 100,batchsize = 8, num_workers = 1):
+    def __init__(self,root_dir,modelname:ModelNames,tasktype:TaskTypes,tokenizer, amount_to_process = 100,batchsize = 8, num_workers = 1):
         super().__init__()
         self._root_dir = root_dir
         self._tokenizer = tokenizer
-        self._modeltype = modeltype
+        self._model_name = modelname
         self._tasktype = tasktype
         self._amount_to_process = amount_to_process #sets a cap on how much data to select
         self._workers = num_workers
@@ -40,12 +41,17 @@ class MoralStoryDataLoader(pl.LightningDataModule):
         self._valset = None
 
     def setup(self,stage=None):
+        path = self._root_dir
+        tokenizer = self._tokenizer
+        model_name = self._model_name
+        tasktype = self._tasktype
+
         the_moral_story_test = MoralStoryClassifyDataset(path, dataset_type=DatasetType.TEST, tokenizer=tokenizer,
-                                                    model_name=modeltype, tasktype=tasktype)
+                                                    model_name=model_name, tasktype=tasktype)
         the_moral_story_train = MoralStoryClassifyDataset(path, dataset_type=DatasetType.TRAIN, tokenizer=tokenizer,
-                                                         model_name=modeltype, tasktype=tasktype)
+                                                         model_name=model_name, tasktype=tasktype)
         the_moral_story_validation = MoralStoryClassifyDataset(path, dataset_type=DatasetType.VALIDATION, tokenizer=tokenizer,
-                                                          model_name=modeltype, tasktype=tasktype)
+                                                          model_name=model_name, tasktype=tasktype)
 
         the_moral_story_test.process_data(0,self._amount_to_process)
         the_moral_story_validation.process_data(0,self._amount_to_process)
@@ -159,7 +165,7 @@ if __name__ == '__main__':
     tasktype = TaskTypes.ACTION_CONTEXT_CLS
     the_moral_story = MoralStoryClassifyDataset(path,dataset_type = DatasetType.TEST,tokenizer=tokenizer,model_name=modeltype,tasktype=tasktype)
 
-    temp = the_moral_story.process_data(0, 1000)
+    temp = the_moral_story.process_data(0, 10)
     print("OK")
     wat = DataLoader(the_moral_story,batch_size=2)
     result = next(iter(wat))
