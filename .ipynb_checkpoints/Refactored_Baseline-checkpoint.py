@@ -9,6 +9,9 @@ from pytorch_lightning import loggers as pl_loggers
 from torch.optim import lr_scheduler
 from torch import nn
 import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
+import seaborn as sns
 
 
 class AbstractLightning(pl.LightningModule):
@@ -83,7 +86,7 @@ class Baseline_Model(pl.LightningModule):
         return {'loss': outputs[0], 'preds': outputs[1], 'target': batch['labels'], 'text':''}
     
     def training_epoch_end(self, training_step_outputs):
-        super().training_epoch_end(train_step_outputs)
+        super().training_epoch_end(training_step_outputs)
         
         #https://stackoverflow.com/questions/65498782/how-to-dump-confusion-matrix-using-tensorboard-logger-in-pytorch-lightning
         self._metrics('Train', training_step_outputs)
@@ -108,9 +111,6 @@ class Baseline_Model(pl.LightningModule):
         plt.close(fig_)
         self.logger.experiment.add_figure("Confusion Matrix {}".format(title), fig_, self.current_epoch)
         
-        
-        
-
 if __name__ == '__main__':
     
     roberta = RobertaForSequenceClassification.from_pretrained('roberta-base')
