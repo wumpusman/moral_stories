@@ -8,8 +8,9 @@ import pytorch_lightning as pl
 from pytorch_lightning import loggers as pl_loggers
 from torch.optim import lr_scheduler
 from torch import nn
+import torchmetrics
 import numpy as np
-import matplotlib as plt
+import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 
@@ -98,10 +99,14 @@ class Baseline_Model(pl.LightningModule):
         
     def _metrics(self, title: str, outputs):
         #Collect items
-        preds = torch.cat([tmp['preds'] for tmp in outputs])
-        targets = torch.cat([tmp['target'] for tmp in outputs])
-        losses = torch.cat([tmp['loss'] for tmp in outputs])
-        
+
+
+        #print(outputs)
+        preds =torch.sigmoid(torch.cat([tmp['preds'] for tmp in outputs]).cpu().detach())
+
+        preds = torch.softmax(preds,dim=1)
+        targets = torch.cat([tmp['target'] for tmp in outputs]).cpu().detach()
+
         #Confusion Matrix
         cm = pl.metrics.functional.confusion_matrix(preds, targets, num_classes=2)
         df_cm = pd.DataFrame(cm.numpy(), columns=range(2))
@@ -110,9 +115,19 @@ class Baseline_Model(pl.LightningModule):
         plt.close(fig_)
         self.logger.experiment.add_figure("Confusion Matrix {}".format(title), fig_, self.current_epoch)
         
+        #Precision, Recall, F1
+        precision = torchmetrics.Precision(num_classes = 2)
+        recall = torchmetrics.Recall(num_classes = 2)
+        f1 = torchmetrics.F1(num_classes = 2)
         
+        pscore = precision(preds, targets)
+        rscore = recall(preds, targets)
+        fscore = f1(preds, targets)
         
-
+        self.log('Precision {}'.format(title), pscore)
+        self.log('Recall {}'.format(title), rscore)
+        self.log('F1-Score {}'.format(title), fscore)
+        
 if __name__ == '__main__':
     
     roberta = RobertaForSequenceClassification.from_pretrained('roberta-base')
