@@ -8,11 +8,11 @@ import pytorch_lightning as pl
 from pytorch_lightning import loggers as pl_loggers
 from torch.optim import lr_scheduler
 from torch import nn
+import torchmetrics
 import numpy as np
-import matplotlib.pyplot as plt
+import matplotlib as plt
 import pandas as pd
 import seaborn as sns
-
 
 class AbstractLightning(pl.LightningModule):
     def __init__(self, model, lr=.1):
@@ -110,6 +110,19 @@ class Baseline_Model(pl.LightningModule):
         fig_ = sns.heatmap(df_cm, annot=True, cmap='Spectral').get_figure()
         plt.close(fig_)
         self.logger.experiment.add_figure("Confusion Matrix {}".format(title), fig_, self.current_epoch)
+        
+        #Precision, Recall, F1
+        precision = torchmetrics.Precision(num_classes = 2)
+        recall = torchmetrics.Recall(num_classes = 2)
+        f1 = torchmetrics.F1(num_classes = 2)
+        
+        pscore = precision(preds, target)
+        rscore = recall(preds, target)
+        fscore = f1(preds, target)
+        
+        self.log('Precision {}'.format(title), pscore)
+        self.log('Recall {}'.format(title), rscore)
+        self.log('F1-Score {}'.format(title), fscore)
         
 if __name__ == '__main__':
     
