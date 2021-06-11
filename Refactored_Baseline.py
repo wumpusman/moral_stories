@@ -9,10 +9,9 @@ from pytorch_lightning import loggers as pl_loggers
 from torch.optim import lr_scheduler
 from torch import nn
 import numpy as np
-import matplotlib.pyplot as plt
+import matplotlib as plt
 import pandas as pd
 import seaborn as sns
-
 
 class AbstractLightning(pl.LightningModule):
     def __init__(self, model, lr=.1):
@@ -111,6 +110,9 @@ class Baseline_Model(pl.LightningModule):
         plt.close(fig_)
         self.logger.experiment.add_figure("Confusion Matrix {}".format(title), fig_, self.current_epoch)
         
+        
+        
+
 if __name__ == '__main__':
     
     roberta = RobertaForSequenceClassification.from_pretrained('roberta-base')
